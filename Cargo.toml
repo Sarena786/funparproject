@@ -1,0 +1,11 @@
+[package]
+name = "matrix_multiplication_project"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wide = "0.6"
+
+[dev-dependencies]
+criterion = "0.3"
+
