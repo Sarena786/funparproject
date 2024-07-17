@@ -1,74 +1,52 @@
-mod cache_optimized;
-mod normal_mult;
-mod pure_thread;
-mod simd;
+use rand::Rng;
+use std::time::Instant;
 
-use std::env;
+mod normal_mult;
+mod cache_optimized;
+mod simd;
+mod pure_thread;
+
+pub type Matrix = Vec<Vec<i32>>;
+
+fn generate_random_matrix(n: usize) -> Matrix {
+    let mut rng = rand::thread_rng();
+    let mut matrix = vec![vec![0; n]; n];
+    for i in 0..n {
+        for j in 0..n {
+            matrix[i][j] = rng.gen_range(0..100);
+        }
+    }
+    matrix
+}
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        eprintln!("Usage: {} <method>", args[0]);
-        eprintln!("Methods: normal_mult, pure_thread, cache_optimized, simd");
-        return;
-    }
+    
+    let n = 2000; // Size of the matrix
+    let a = generate_random_matrix(n);
+    let b = generate_random_matrix(n);
 
-    let method = &args[1];
-    let a: normal_mult :: Matrix = vec![
-        vec![1, 2, 3],
-        vec![4, 5, 6],
-    ];
-    let b: normal_mult :: Matrix = vec![
-        vec![7, 8],
-        vec![9, 10],
-        vec![11, 12],
-    ];
+    // Normal multiplication
+    let start = Instant::now();
+    let _ = normal_mult::matrix(&a, &b);
+    let duration = start.elapsed();
+    println!("Normal multiplication took: {:?}", duration);
 
-    match method.as_str() {
-        "normal_mult" => {
-            match normal_mult :: matrix(&a, &b) {
-                Some(result) => {
-                    for row in result {
-                        println!("{:?}", row);
-                    }
-                }
-                None => println!("Error in matrix dimensions"),
-            }
-        }
-        "pure_thread" => {
-            match pure_thread :: matrix(&a, &b) {
-                Some(result) => {
-                    for row in result {
-                        println!("{:?}", row);
-                    }
-                }
-                None => println!("Error in matrix dimensions"),
-            }
-        }
-        // "cache_optimized" => {
-        //     let block_size = 2;
-        //     match cache_optimized :: matrix(&a, &b, block_size) {
-        //         Some(result) => {
-        //             for row in result {
-        //                 println!("{:?}", row);
-        //             }
-        //         }
-        //         None => println!("Error in matrix dimensions"),
-        //     }
-        // }
-        // "simd" => {
-        //     match simd :: matrix(&a, &b) {
-        //         Some(result) => {
-        //             for row in result {
-        //                 println!("{:?}", row);
-        //             }
-        //         }
-        //         None => println!("Error in matrix dimensions"),
-        //     }
-        // }
-        _ => {
-            eprintln!("Unknown method: {}", method);
-            eprintln!("Methods: normal, threading, cache_optimized, simd");
-        }
-    }
+    // Cache-optimized multiplication
+    let block_size = 64;
+    let start = Instant::now();
+    let _ = cache_optimized::matrix(&a, &b, block_size);
+    let duration = start.elapsed();
+    println!("Cache-optimized multiplication took: {:?}", duration);
+
+    // Threaded multiplication
+    let start = Instant::now();
+    let _ = pure_thread::matrix(&a, &b);
+    let duration = start.elapsed();
+    println!("Pure threads took: {:?}", duration);
+
+    // SIMD multiplication
+    let start = Instant::now();
+    let _ = simd::matrix(&a, &b);
+    let duration = start.elapsed();
+    println!("SIMD multiplication took: {:?}", duration);
 }
