@@ -1,0 +1,27 @@
+Overall, our project is using altogether four ways to achieve matrix multiplication: 
+1. normal matrix multiplication way: this way basically transformed from the idea of dot product, we use a nested loop to access the resulting matrix index correctly and attempt to write to that specific index,
+at the inner most loop we use .map to iterate over matrix a's column to ultimately achieve dot product and use .sum to calculate the sum of that result, this idea would not just be the central idea of this method, 
+it would be the basic method how we compute the dot product in these four methods, so mark it here.
+
+2. threaded way: we tried to manually control thread at the point that we do dot product, so basically, each time we are about to do the dot product, we will initialize a thread responsible to that dot product,
+by using handles var to store the threads, we can later use .join to get the result from all threads to form our resulting matrix, since we use same idea to implement it, it will invlove with two loops, 
+assumed that our matrix a and matrix b is square matrix, size of n * n, hence the nested loop will result in O(n^2) work, inside of it, the dot product computation will take O(n), this will result in 
+total work done O(n^3), and since each thread is responsible for one dot product, so the Span of this method would result in O(n).
+
+3. cache optimized method: we try to implement the idea of reducing cache misses to make it faster, the logic behind is that: in the cache line, if we try to access one elt in that cache line, the nearby elts
+are likely to be loaded in cache, which means if we access the nearby elts would be faster, other than this, if we try to access the same data repeatedly, the following access will be faster. so with this idea implemented,
+we can narrow down the size of the original matrices (a and b) in to small block size, and note that the block size is changeable as the user wish, but after we test through the block size, seems that 64 will be a great choice
+and even we can transpose the right matrix(matrix b) before been computed, since this matrix originally is column-major order accessing, which means at the inner most loop, when we vary the k var, we are keep accessing non-nearby
+memory, so it will influence the performance significantly, but after transpose this matrix, we are accessing this matrix in row-major order, which is sequencial memory in cache line, and in this way it will become faster
+
+4.SIMD method: we try to implement the idea of simple instruction multiple data into matrix multiplication, in this way, we will use another perspective to improve the performance, and also it can be refined to be parallel SIMD,
+which will be even better than only SIMD, but in our project it only makes use of SIMD, but as for the result, it indeed improves a lot in terms of run time. it involves allocating memory for transposed matrices to optimize access patterns, 
+using _mm_loadu_si128 to load data, _mm_mullo_epi32 to multiply, and _mm_add_epi32 to sum the products. the horizontal addition reduces the SIMD registers to a single value, which is stored in the result matrix.
+this approach enhances performance by utilizing data parallelism, reducing the number of required operations, and improving cache utilization. basically we make it more efficient by processing multiple elements simultaneously.
+
+Summary:
+after this project, we get to know that there always one more way to optimize a seemingly simple process, not just make necessary process in parallel, and also, we can try to reduce cache miss or process multiple data simutaneously in one
+CPU cycle. so in our future study, this would definitely help with setting up the idea to implement one idea into codes. This is also my first time to do group coding with groupmate, and first time using GitHub, I would say this experience 
+is awesome and unique, since it introduces me into another perspective to complete a long project.
+
+here thanks to my group mate Sareena for contributing to this project, salute.
